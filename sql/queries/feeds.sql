@@ -20,3 +20,17 @@ ON f.user_id = u.id;
 SELECT *
 FROM feeds f
 WHERE f.url = $1;
+
+-- name: MarkFeedFetched :exec
+UPDATE feeds f
+SET last_fetched_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE f.id = $1;
+
+-- name: GetNextFeedToFetch :one
+SELECT * FROM feeds f
+JOIN users u
+ON f.user_id = u.id
+WHERE u.name = $1
+ORDER BY last_fetched_at ASC NULLS FIRST
+LIMIT 1;

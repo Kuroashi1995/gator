@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
-	"github.com/Kuroashi1995/rss-go/internal/database"
-	"github.com/Kuroashi1995/rss-go/internal/rss"
-	"github.com/Kuroashi1995/rss-go/internal/state"
+	"github.com/Kuroashi1995/gator/internal/database"
+	"github.com/Kuroashi1995/gator/internal/rss"
+	"github.com/Kuroashi1995/gator/internal/state"
 	"github.com/google/uuid"
 )
 
@@ -80,13 +81,27 @@ func HandlerUsers(s *state.State, cmd Command) error {
 }
 
 func HandlerAgg(s *state.State, cmd Command) error {
-	ctx := context.Background()
-	result, err := rss.FetchFeed(ctx, "https://www.wagslane.dev/index.xml")
-	if err != nil {
-		return fmt.Errorf("Error fecthing rrs feed: %v\n", err.Error())
+	if len(cmd.Arguments) < 1 {
+		return fmt.Errorf("agg expects duration argument\n")
 	}
-	fmt.Println(result)
-	return nil
+	// get time
+	time_between_reqs, err := time.ParseDuration(cmd.Arguments[0])
+	if err != nil {
+		return fmt.Errorf("an error ocurred while parsing duration: %v\n", err.Error())
+	}
+	fmt.Printf("Collecting feeds every %v\n", time_between_reqs)
+	
+	// get ticker
+	ticker := time.NewTicker(time_between_reqs)
+
+	// start loop
+	for ; ; <-ticker.C {
+		err := rss.ScrapeFeeds(s)
+		if err != nil {
+			return fmt.Errorf("error while scraping feeds: %v\n", err.Error())
+		}
+		fmt.Println(time.Now().Clock())
+	}
 }
 
 func HandlerAddFeed(s *state.State, cmd Command, user database.User) error {
@@ -214,5 +229,32 @@ func HandlerUnfollow(s *state.State, cmd Command, user database.User) error {
 		return fmt.Errorf("an error occurred while deleting feed follow: %v\n", err.Error())
 	}
 	return nil
-
 }
+
+func HandlerBrowse (s *state.State, cmd Command, u database.User) error {
+	// check arguments
+	var limit int64
+	var err error
+	if len(cmd.Arguments) < 1 {
+		limit = 2
+	} else {
+		limit, err = strconv.ParseInt(cmd.Arguments[0], 10, 32)
+		if err != nil {
+			fmt.Println("error while parsing argument, defaulting to 2")
+			limit = 2
+		}
+	}
+	ctx := context.Background()
+	
+	posts, err := s.Db.GetPostsForUser(ctx, database.GetPostsForUserParams{
+		UserID: u.ID,
+		Limit: int32(limit),
+	})
+	fmt.Println("Your posts are:")
+	for _, post := range posts {
+		fmt.Printf("\t- Name: %v\n\t- Description: %v\n\n", post.Title, post.Description.String)
+	}
+
+	return nil
+}
+

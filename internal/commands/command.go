@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Kuroashi1995/rss-go/internal/state"
+	"github.com/Kuroashi1995/gator/internal/state"
 )
 
 type Command struct {

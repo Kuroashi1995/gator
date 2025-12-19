@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Kuroashi1995/rss-go/internal/commands"
-	"github.com/Kuroashi1995/rss-go/internal/config"
-	"github.com/Kuroashi1995/rss-go/internal/database"
-	"github.com/Kuroashi1995/rss-go/internal/state"
+	"github.com/Kuroashi1995/gator/internal/commands"
+	"github.com/Kuroashi1995/gator/internal/config"
+	"github.com/Kuroashi1995/gator/internal/database"
+	"github.com/Kuroashi1995/gator/internal/state"
 	_ "github.com/lib/pq"
 )
 func middlewareLoggedIn(handler func(s *state.State, cmd commands.Command, user database.User) error) func(*state.State, commands.Command) error {
@@ -42,10 +42,12 @@ func main() {
 	state.Db = dbQueries
 
 	//initialize commands
+	//TODO: move to a better place
 	cliCommands := commands.InitializeCommands()
 	cliCommands.Register("login", commands.HandlerLogin)
 	cliCommands.Register("register", commands.HandlerRegister)
-	cliCommands.Register("reset", commands.HandlerReset)
+	//TODO: later remove for prod
+	//cliCommands.Register("reset", commands.HandlerReset)
 	cliCommands.Register("users", commands.HandlerUsers)
 	cliCommands.Register("agg", commands.HandlerAgg)
 	cliCommands.Register("addfeed", middlewareLoggedIn(commands.HandlerAddFeed))
@@ -53,6 +55,7 @@ func main() {
 	cliCommands.Register("follow", middlewareLoggedIn(commands.HandlerFollow))
 	cliCommands.Register("following", commands.HandlerFollowing)
 	cliCommands.Register("unfollow", middlewareLoggedIn(commands.HandlerUnfollow))
+	cliCommands.Register("browse", middlewareLoggedIn(commands.HandlerBrowse))
 
 
 	//check arguments

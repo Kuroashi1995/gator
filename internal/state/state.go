@@ -1,8 +1,8 @@
 package state
 
 import (
-	"github.com/Kuroashi1995/rss-go/internal/config"
-	"github.com/Kuroashi1995/rss-go/internal/database"
+	"github.com/Kuroashi1995/gator/internal/config"
+	"github.com/Kuroashi1995/gator/internal/database"
 )
 
 

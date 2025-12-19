@@ -1,4 +1,4 @@
-module github.com/Kuroashi1995/rss-go
+module github.com/Kuroashi1995/gator
 
 go 1.25.5
 
